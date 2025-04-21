@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model acesso {
+  id                   String   @id @default(uuid())
+  numProjeto           String   @unique
+  nomeConcessionaria   String
+  contractNumber       String
+  tensaoRede           String
+  grupoConexao         String
+  tipoConexao          String
+  tipoSolicitacao      String
+  tipoRamal            String
+  ramoAtividade        String
+  enquadramentoGeracao String
+  tipoGeracao          String
+  potenciaInstalada    String?
+  fotoMedidor          String?
+  poste                String?
+  longitudeUTM         String
+  latitudeUTM          String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
+  cliente              cliente  @relation(fields: [numProjeto], references: [numProjeto])
+}
+
+model cliente {
+  id               String   @id @default(uuid())
+  nome             String
+  rgCnh            String
+  rgCnhDataEmissao DateTime
+  cpf              String   @unique
+  fone             String
+  email            String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime 
+  rua              String
+  numero           String
+  complemento      String?
+  bairro           String
+  cidade           String
+  uf               String
+  cep              String
+  numProjeto       String   @unique
+  acesso           acesso?
+}
+
+model user {
+  id               String    @id @default(uuid())
+  name             String?
+  email            String    @unique
+  password         String
+  userType         String    @default("int")
+  emailVerified    DateTime?
+  image            String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  passwordResetCodes PasswordResetCode[]
+}
+
+model PasswordResetCode {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  email      String
+  expiry     DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       user     @relation(fields: [userId], references: [id])
+}
+
+model modulo {
+  id                  String     @id @default(uuid())
+  modelo              String
+  marca               String
+  potenciaNominal     String
+  tensaoCircAberto    String
+  correnteCurtCirc    String
+  tensaoMaxOper       String
+  correnteMaxOper      String
+  eficiencia          String
+  datasheet           String
+  seloInmetro         String?
+  comprimento         Decimal @db.Decimal(5,2)
+  largura             Decimal @db.Decimal(5,2)
+  area                Decimal @db.Decimal(5,2)
+  peso                Decimal @db.Decimal(5,2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime 
+}
+
+model inversor {
+  id                  String     @id @default(uuid())
+  fabricante          String
+  modelo              String
+  potenciaNominalEnt  Decimal @db.Decimal(10,2)
+  potenciaMaxEnt      Decimal @db.Decimal(10,2)
+  tensaoMaxEnt        Decimal @db.Decimal(10,2)
+  tensaoInicializacao Decimal @db.Decimal(10,2)
+  tensaoNominalEnt    Decimal @db.Decimal(10,2)
+  numeroEntMPPT       Int
+  potenciaMaxMPPT     Decimal @db.Decimal(10,2)
+  correnteMaxEnt      Decimal @db.Decimal(10,2)
+  correnteMaxCurtCirc Decimal @db.Decimal(10,2)
+  potenciaNominalSai  Decimal @db.Decimal(10,2)
+  potenciaMaxSai      Decimal @db.Decimal(10,2)
+  correnteNominalSai  Decimal @db.Decimal(10,2)
+  correnteMaxSai      Decimal @db.Decimal(10,2)
+  tensaoNominalSai    Decimal @db.Decimal(10,2)
+  THD                 Decimal @db.Decimal(10,2)
+  frequenciaNominal   Decimal @db.Decimal(10,2)
+  fatorPotencia       Decimal @db.Decimal(10,2)
+  tensaoMaxsSai       Decimal @db.Decimal(10,2)
+  tensaoMinSai        Decimal @db.Decimal(10,2)
+  eficiencia          Decimal @db.Decimal(10,2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
