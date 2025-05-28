@@ -96,11 +96,11 @@ export function LoginForm() {
         )}
       </Button>
       <div className="text-sm text-center space-x-2">
-        <Link href="/register" className="text-green-600 hover:underline">
+        <Link href="/sign-up" className="text-green-600 hover:underline">
           Criar conta
         </Link>
         <span>·</span>
-        <Link href="/reset-password" className="text-green-600 hover:underline">
+        <Link href="/reset" className="text-green-600 hover:underline">
           Esqueceu a senha?
         </Link>
       </div>

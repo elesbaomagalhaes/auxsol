@@ -25,7 +25,6 @@ export function formatDecimalInput(value: string, decimalPlaces: number = 2): st
   if (parts.length > 1 && parts[1].length > decimalPlaces) {
     formattedValue = parts[0] + '.' + parts[1].substring(0, decimalPlaces);
   }
-  
   return formattedValue;
 }
 

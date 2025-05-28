@@ -30,6 +30,9 @@ model acesso {
   createdAt            DateTime @default(now())
   updatedAt            DateTime
   cliente              cliente  @relation(fields: [numProjeto], references: [numProjeto])
+  userId               String?
+  user                 user?    @relation(fields: [userId], references: [id])
+  projetos             projeto[]
 }
 
 model cliente {
@@ -51,24 +54,177 @@ model cliente {
   cep              String
   numProjeto       String   @unique
   acesso           acesso?
+  projetos         projeto[]
+  userId           String?
+  user             user?    @relation(fields: [userId], references: [id])
 }
 
 model user {
-  id               String    @id @default(uuid())
-  name             String?
-  email            String    @unique
-  password         String
-  userType         String    @default("int")
-  emailVerified    DateTime?
-  image            String?
-  resetToken       String?
-  resetTokenExpiry DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime
-  passwordResetCodes PasswordResetCode[]
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      account[]
+  sessions      session[]
+  userType      String
+  password     String
+  Authenticator authenticator[]
+  passwordResetCodes passwordResetCode[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modulos     modulo[]
+  inversores  inversor[]
+  tecnicos    tecnico[]
+  stringBoxCCs stringBoxCC[]
+  protecaoCAs protecaoCA[]
+  clientes    cliente[]
+  acessos     acesso[]
+  projetos    projeto[]
 }
 
-model PasswordResetCode {
+model tecnico {
+  id               String   @id @default(uuid())
+  nome             String
+  registro         String
+  rgCnh            String
+  cpf              String   @unique
+  fone             String
+  email            String
+  tipoProfissional String
+  logradouro       String
+  numero           String
+  complemento      String?
+  bairro           String
+  cidade           String
+  uf               String
+  cep              String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  userId           String?
+  user             user?    @relation(fields: [userId], references: [id])
+  projetos         projeto[]
+}
+
+model stringBoxCC {
+  id                    String   @id @default(uuid())
+  fabricante            String
+  modelo                String
+  numeroEntradas        Int
+  numeroSaidas          Int
+  tensaoMaxOperacao     String
+  correnteMaxOperacao   String
+  classeDps             String
+  nivelProtecao         String
+  correnteNominalDescarga String
+  correnteMaxDescarga   String
+  numeroPoloSeccionadora Int
+  grauProtecao          String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  userId                String?
+  user                  user?    @relation(fields: [userId], references: [id])
+}
+
+model protecaoCA {
+  id          String   @id @default(uuid())
+  numeroPoloDisjuntor     Int
+  tensaoNomDisjuntor      String
+  correnteNomDisjuntor    String
+  frequenciaNomDisjuntor  String
+  elementoProtDisjuntor   String
+  correnteMaxDisjuntor    String?
+  curvaDisjuntor          String
+  classeDps               String
+  correnteNomDPS          String
+  correnteMaxDPS          String?
+  tensaoNomDPS            String?
+  tensaoMaxDPS            String?
+  numeroPoloDPS           Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId                  String?
+  modelo                  String?
+  user        user?    @relation(fields: [userId], references: [id]) 
+}
+
+model projeto {
+  id                String      @id @default(uuid())
+  potenciaGeracao   Decimal     @db.Decimal(10,2)
+  potenciaInversor Decimal    @db.Decimal(10,2)
+  quantidadeModulo Int
+  quantidadeInversore Int
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  clienteId         String
+  cliente           cliente     @relation(fields: [clienteId], references: [id])
+  moduloId          String
+  modulo            modulo      @relation(fields: [moduloId], references: [id])
+  inversorId        String
+  inversor          inversor    @relation(fields: [inversorId], references: [id])
+  tecnicoId         String
+  tecnico           tecnico     @relation(fields: [tecnicoId], references: [id])
+  acessoId          String
+  acesso            acesso      @relation(fields: [acessoId], references: [id])
+  userId            String?
+  user              user?       @relation(fields: [userId], references: [id])
+}
+ 
+model account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
+}
+ 
+model session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model verificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+  @@id([identifier, token])
+}
+ 
+// Optional for WebAuthn support
+model authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+ 
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([userId, credentialID])
+}
+
+model passwordResetCode {
   id         String   @id @default(uuid())
   code       String   @unique
   email      String
@@ -76,53 +232,61 @@ model PasswordResetCode {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   userId     String
-  user       user     @relation(fields: [userId], references: [id])
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model modulo {
   id                  String     @id @default(uuid())
   modelo              String
-  marca               String
-  potenciaNominal     String
+  fabricante          String
+  potenciaNominal     Decimal @db.Decimal(5,2)
   tensaoCircAberto    String
   correnteCurtCirc    String
-  tensaoMaxOper       String
-  correnteMaxOper      String
+  tensaoMaxOper       Decimal @db.Decimal(5,2)
+  correnteMaxOper     Decimal @db.Decimal(5,2)
   eficiencia          String
-  datasheet           String
+  datasheet           String?
   seloInmetro         String?
-  comprimento         Decimal @db.Decimal(5,2)
-  largura             Decimal @db.Decimal(5,2)
-  area                Decimal @db.Decimal(5,2)
-  peso                Decimal @db.Decimal(5,2)
+  comprimento         Decimal @db.Decimal(8,2)
+  largura             Decimal @db.Decimal(8,2)
+  area                Decimal @db.Decimal(8,2)
+  peso                Decimal @db.Decimal(8,2)
   createdAt           DateTime @default(now())
   updatedAt           DateTime 
+  projetos            projeto[]
+  userId              String?
+  user                user?     @relation(fields: [userId], references: [id])
 }
 
 model inversor {
   id                  String     @id @default(uuid())
   fabricante          String
   modelo              String
-  potenciaNominalEnt  Decimal @db.Decimal(10,2)
+  potenciaNomEnt      Decimal @db.Decimal(10,2)
   potenciaMaxEnt      Decimal @db.Decimal(10,2)
-  tensaoMaxEnt        Decimal @db.Decimal(10,2)
-  tensaoInicializacao Decimal @db.Decimal(10,2)
-  tensaoNominalEnt    Decimal @db.Decimal(10,2)
+  tensaoMaxEnt        String
+  tensaoInic          String
+  tensaoNomEnt        String
   numeroEntMPPT       Int
-  potenciaMaxMPPT     Decimal @db.Decimal(10,2)
-  correnteMaxEnt      Decimal @db.Decimal(10,2)
-  correnteMaxCurtCirc Decimal @db.Decimal(10,2)
-  potenciaNominalSai  Decimal @db.Decimal(10,2)
+  potenciaMaxMPPT     String
+  correnteMaxEnt      String
+  correnteMaxCurtCirc String
+  potenciaNomSai      Decimal @db.Decimal(10,2)
   potenciaMaxSai      Decimal @db.Decimal(10,2)
-  correnteNominalSai  Decimal @db.Decimal(10,2)
-  correnteMaxSai      Decimal @db.Decimal(10,2)
-  tensaoNominalSai    Decimal @db.Decimal(10,2)
-  THD                 Decimal @db.Decimal(10,2)
-  frequenciaNominal   Decimal @db.Decimal(10,2)
+  correnteNomSai      String
+  correnteMaxSai      String
+  tensaoNomSai        String
+  THD                 String
+  frequenciaNom       String
   fatorPotencia       Decimal @db.Decimal(10,2)
-  tensaoMaxsSai       Decimal @db.Decimal(10,2)
-  tensaoMinSai        Decimal @db.Decimal(10,2)
+  tensaoMaxsSai       String
+  tensaoMinSai        String
   eficiencia          Decimal @db.Decimal(10,2)
+  typeInv             String
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  projetos            projeto[]
+  userId              String?
+  user                user?     @relation(fields: [userId], references: [id])
 }
+        

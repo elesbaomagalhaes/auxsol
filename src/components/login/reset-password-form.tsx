@@ -87,7 +87,7 @@ export function ResetPasswordForm() {
       </Button>
 
       <div className="text-sm text-center">
-        <Link href="/login" className="text-green-600 hover:underline">
+        <Link href={"/sign-in"} className="text-green-600 hover:underline">
           Voltar para o login
         </Link>
       </div>

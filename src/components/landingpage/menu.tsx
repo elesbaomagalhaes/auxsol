@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ScanFace } from "lucide-react"
 
 export function MenuNavbar() {
   return (
@@ -18,15 +17,15 @@ export function MenuNavbar() {
          </Link>
       </div>
       <div className="hidden md:flex sm:flex items-center gap-6">
-        <Link href="/landingpage/solucao" className="text-black hover:underline">
-          Solução
+        <Link href={"/sobre"} className="text-black hover:underline">
+          Sobre
         </Link>
-        <Link href="/landingpage/precos" className="text-black hover:underline">
-          Preço
+        <Link href={"/planos"} className="text-black hover:underline">
+          Planos
         </Link>
       </div>
     </div>
-    <Link href={"/login"} className="bg-black text-white px-4 py-2 rounded-full">
+    <Link href={"/sign-in"} className="bg-black text-white px-4 py-2 rounded-full">
     Login
     </Link>
   </nav>
