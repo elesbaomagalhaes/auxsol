@@ -59,7 +59,7 @@ export function FormCadastroUser() {
       // Mostrar toast de carregamento
       const loadingToast = toast.loading("Criando sua conta...");
 
-      const response = await fetch("/api/auth/cadastro", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -100,7 +100,7 @@ export function FormCadastroUser() {
 
       // Pequeno atraso para o usuário ver o toast antes do redirecionamento
       setTimeout(() => {
-        router.push("/login?registered=true");
+        router.push("/sing-in");
         router.refresh();
       }, 2000);
     } catch (error) {
@@ -246,7 +246,7 @@ export function FormCadastroUser() {
 
       <div className="text-sm text-center">
         <span className="text-gray-600">Já possui uma conta?</span>{" "}
-        <Link href="/login" className="text-green-600 hover:underline">
+        <Link href={"/sign-in"} className="text-green-600 hover:underline">
           Faça login
         </Link>
       </div>

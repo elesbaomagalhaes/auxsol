@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "protecaoCA" ALTER COLUMN "correnteMaxDisjuntor" DROP NOT NULL,
+ALTER COLUMN "correnteMaxDPS" DROP NOT NULL,
+ALTER COLUMN "tensaoMaxDPS" DROP NOT NULL;
