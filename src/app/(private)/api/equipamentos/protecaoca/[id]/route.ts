@@ -1,173 +1,157 @@
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { protecaoCASchema } from "@/lib/schema/protecao-ca";
 
-/**
- * API route para atualizar uma Proteção CA existente
- * Esta rota recebe os dados do formulário de edição e atualiza o registro no banco de dados
- * usando o Prisma ORM
- */
-
-
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+// GET - Buscar proteção CA por ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    // Verificar autenticação
     const session = await auth();
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Não autorizado" },
+        { error: "Não autorizado" },
         { status: 401 }
       );
     }
 
-    // Obter ID da Proteção CA a ser atualizada
-    const id = params.id;
-    
-    // Verificar se o ID é válido
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: "ID não fornecido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a Proteção CA existe
-    const existingProtrecaoCA = await prisma.protecaoCA.findUnique({
-      where: { id },
+    const protecao = await prisma.protecaoCA.findFirst({
+      where: {
+        id: id,
+        userId: session.user.id,
+      },
     });
 
-    if (!existingProtrecaoCA) {
+    if (!protecao) {
       return NextResponse.json(
-        { success: false, message: "Protecao CA não encontrada" },
+        { error: "Proteção CA não encontrada" },
         { status: 404 }
       );
     }
 
-    // Obter dados JSON do corpo da requisição
-    const data = await request.json();
-    
-    // Validar dados usando o schema Zod
-    const validatedData = protecaoCASchema.parse(data);
-    
-    // Log dos dados antes de atualizar
-    console.log("Dados da Proteção CA a serem atualizados:", validatedData);
-    
-
-    // Verificar quais campos existem no modelo Prisma e incluir apenas esses na atualização
-    const updatedProtecaoCA = await prisma.protecaoCA.update({
-      where: { id },
-      data: {
-        ...validatedData,
-         updatedAt: new Date(),
-      },
-         
-    });
-
-    // Retornar resposta de sucesso com os dados atualizados
-    return NextResponse.json({ 
-      success: true, 
-      message: "Proteção Ca atualizada com sucesso",
-      data: updatedProtecaoCA 
-    }, { status: 200 });
-    
+    return NextResponse.json(protecao);
   } catch (error) {
-    console.error("Erro ao atualizar Proteção CA:", error);
-    
-    // Verificar se é um erro de validação do Zod
-    if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message
-      }));
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: "Erro de validação", 
-        errors: errorMessages 
-      }, { status: 400 });
-    }
-    
-    // Verificar se é um erro de chave única
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json({
-        success: false,
-        message: `O campo ${(error as any).meta?.target?.[0] || 'desconhecido'} já está em uso`,
-      }, { status: 409 });
-    }
-    
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    console.error("Erro ao buscar proteção CA:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+// PUT - Atualizar proteção CA
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    // Verificar autenticação
     const session = await auth();
-    if (!session || !session.user?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Não autorizado" },
+        { error: "Não autorizado" },
         { status: 401 }
       );
     }
 
-    // Obter ID da Proteção CA a ser excluída
-    const id = params.id;
-    const userId = session.user.id;
+    const body = await request.json();
+    
+    // Validar dados com Zod
+    const validatedData = protecaoCASchema.parse(body);
 
-    // Verificar se o ID é válido
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: "ID não fornecido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a Proteção CA existe e pertence ao usuário
-    const protecaoCAToDelete = await prisma.protecaoCA.findFirst({
-      where: { 
+    // Verificar se a proteção CA existe e pertence ao usuário
+    const existingProtecao = await prisma.protecaoCA.findFirst({
+      where: {
         id: id,
-        userId: userId 
+        userId: session.user.id,
       },
     });
 
-    if (!protecaoCAToDelete) {
+    if (!existingProtecao) {
       return NextResponse.json(
-        { success: false, message: "Protecao CA não encontrada ou não pertence ao usuário" },
+        { error: "Proteção CA não encontrada" },
         { status: 404 }
       );
     }
 
-    // Excluir a Proteção CA
-    await prisma.protecaoCA.delete({
-      where: { 
+    // Atualizar proteção CA
+    const protecao = await prisma.protecaoCA.update({
+      where: {
         id: id,
-        // Adicionar userId aqui se a chave primária/única for composta por id e userId
-        // Caso contrário, a verificação acima já garante que o item pertence ao usuário.
-        // Se id é único globalmente, a cláusula where: {id: id} é suficiente aqui,
-        // mas para maior segurança e consistência com a verificação, pode-se usar:
-        // id_userId: { id: id, userId: userId } se tal índice existir, ou manter como está.
+      },
+      data: {
+        ...validatedData,
+        updatedAt: new Date(),
       },
     });
 
-    // Retornar resposta de sucesso
-    return NextResponse.json({ 
-      success: true, 
-      message: "Proteção CA excluída com sucesso"
-    }, { status: 200 });
-    
+    return NextResponse.json(protecao);
   } catch (error) {
-    console.error("Erro ao excluir Proteção CA:", error);
+    console.error("Erro ao atualizar proteção CA:", error);
     
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    if (error instanceof Error && error.name === "ZodError") {
+      return NextResponse.json(
+        { error: "Dados inválidos", details: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Erro ao atualizar dados" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Remover proteção CA
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
+    // Verificar se a proteção CA existe e pertence ao usuário
+    const existingProtecao = await prisma.protecaoCA.findFirst({
+      where: {
+        id: id,
+        userId: session.user.id,
+      },
+    });
+
+    if (!existingProtecao) {
+      return NextResponse.json(
+        { error: "Proteção CA não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    // Remover proteção CA
+    await prisma.protecaoCA.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    return NextResponse.json(
+      { message: "Proteção CA removida com sucesso" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Erro ao remover proteção CA:", error);
+    return NextResponse.json(
+      { error: "Erro ao remover dados" },
+      { status: 500 }
+    );
   }
 }

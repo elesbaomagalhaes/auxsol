@@ -35,6 +35,7 @@ export default async function DashInversor() {
       correnteMaxSai: true,
       tensaoNomSai: true,
       THD: true,
+      tipoInv: true,
       frequenciaNom: true,
       fatorPotencia: true,
       tensaoMaxsSai: true,

@@ -1,168 +1,161 @@
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { moduloFormSchema } from "@/lib/schema/moduloSchema";
 
-/**
- * API route para atualizar uma Inversor existente
- * Esta rota recebe os dados do formulário de edição e atualiza o registro no banco de dados
- * usando o Prisma ORM
- */
-
-
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+// GET - Buscar módulo por ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    // Verificar autenticação
     const session = await auth();
-    if (!session) {
+    
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Não autorizado" },
+        { error: "Não autorizado" },
         { status: 401 }
       );
     }
 
-    // Obter ID da Inversor a ser atualizada
-    const id = params.id;
-    
-    // Verificar se o ID é válido
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: "ID não fornecido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a Inversor existe
-    const existingModulo = await prisma.modulo.findUnique({
-      where: { id },
+    const modulo = await prisma.modulo.findUnique({
+      where: {
+        id: id,
+      },
     });
 
-    if (!existingModulo) {
+    if (!modulo) {
       return NextResponse.json(
-        { success: false, message: "Módulo não encontrada" },
+        { error: "Módulo não encontrado" },
         { status: 404 }
       );
     }
 
-    // Obter dados JSON do corpo da requisição
-    const data = await request.json();
-    
-    // Validar dados usando o schema Zod
-    const validatedData = moduloFormSchema.parse(data);
-    
-    // Log dos dados antes de atualizar
-    console.log("Dados da Inversor a serem atualizados:", validatedData);
-    
-
-    // Verificar quais campos existem no modelo Prisma e incluir apenas esses na atualização
-    const updatedmodulo = await prisma.modulo.update({
-      where: { id },
-      data: {
-        ...validatedData,
-         updatedAt: new Date()
-      },
-         
-    });
-
-    // Retornar resposta de sucesso com os dados atualizados
-    return NextResponse.json({ 
-      success: true, 
-      message: "Inversor atualizada com sucesso",
-      data: updatedmodulo 
-    }, { status: 200 });
-    
+    return NextResponse.json(modulo);
   } catch (error) {
-    console.error("Erro ao atualizar Inversor:", error);
-    
-    // Verificar se é um erro de validação do Zod
-    if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message
-      }));
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: "Erro de validação", 
-        errors: errorMessages 
-      }, { status: 400 });
-    }
-    
-    // Verificar se é um erro de chave única
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json({
-        success: false,
-        message: `O campo ${(error as any).meta?.target?.[0] || 'desconhecido'} já está em uso`,
-      }, { status: 409 });
-    }
-    
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    console.error("Erro ao buscar módulo:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+// PUT - Atualizar módulo
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    // Verificar autenticação
     const session = await auth();
-    if (!session || !session.user?.id) {
+    
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Não autorizado" },
+        { error: "Não autorizado" },
         { status: 401 }
       );
     }
 
-    // Obter ID da Inversor a ser excluída
-    const id = params.id;
-    const userId = session.user.id;
-
-    // Verificar se o ID é válido
-    if (!id) {
+    const body = await request.json();
+    
+    // Validar dados com Zod
+    const validatedData = moduloFormSchema.safeParse(body);
+    
+    if (!validatedData.success) {
       return NextResponse.json(
-        { success: false, message: "ID não fornecido" },
+        { 
+          error: "Dados inválidos",
+          details: validatedData.error.errors
+        },
         { status: 400 }
       );
     }
 
-    // Verificar se a Inversor existe e pertence ao usuário
-    const inversorToDelete = await prisma.modulo.findFirst({
-      where: { 
+    // Verificar se o módulo existe
+    const moduloExistente = await prisma.modulo.findUnique({
+      where: {
         id: id,
-        userId: userId 
       },
     });
 
-    if (!inversorToDelete) {
+    if (!moduloExistente) {
       return NextResponse.json(
-        { success: false, message: "Módulo não encontrada ou não pertence ao usuário" },
+        { error: "Módulo não encontrado" },
         { status: 404 }
       );
     }
 
-    // Excluir a Inversor
-    await prisma.modulo.delete({
-      where: { 
-        id: id
+    // Atualizar módulo no banco de dados
+    const moduloAtualizado = await prisma.modulo.update({
+      where: {
+        id: id,
+      },
+      data: {
+        ...validatedData.data,
+        updatedAt: new Date(),
       },
     });
 
-    // Retornar resposta de sucesso
-    return NextResponse.json({ 
-      success: true, 
-      message: "Módulo excluída com sucesso"
-    }, { status: 200 });
-    
+    return NextResponse.json({
+      message: "Módulo atualizado com sucesso",
+      modulo: moduloAtualizado,
+    });
   } catch (error) {
-    console.error("Erro ao excluir Inversor:", error);
+    console.error("Erro ao atualizar módulo:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Remover módulo
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const session = await auth();
     
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
+    // Verificar se o módulo existe
+    const moduloExistente = await prisma.modulo.findUnique({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!moduloExistente) {
+      return NextResponse.json(
+        { error: "Módulo não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Remover módulo do banco de dados
+    await prisma.modulo.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    return NextResponse.json({
+      message: "Módulo removido com sucesso",
+    });
+  } catch (error) {
+    console.error("Erro ao remover módulo:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
   }
 }

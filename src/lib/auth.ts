@@ -6,7 +6,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { compare } from "bcryptjs";
 import { v4 as uuid } from "uuid";
 import { encode as defaultEncode } from "next-auth/jwt";
@@ -22,6 +22,7 @@ const adapter = PrismaAdapter(prisma);
  */
 export const { auth, handlers, signIn, signOut } = NextAuth({
       adapter,
+    trustHost: true,
     providers: [
         /**
          * Provedor de credenciais para autenticação com email e senha.

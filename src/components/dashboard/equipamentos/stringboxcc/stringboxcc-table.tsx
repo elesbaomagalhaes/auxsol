@@ -9,6 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Trash2, Edit, Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { EditStringBoxCCDialog } from "./edit-dialog";
@@ -131,14 +137,24 @@ export function StringBoxCCTable({ data }: StringBoxCCTableProps) {
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="icon" 
-                      aria-label="Deletar StringBox CC"
-                      onClick={() => handleDeleteClick(stringBox.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            aria-label="Deletar String Box CC"
+                            onClick={() => handleDeleteClick(stringBox.id)}
+                            className="hover:bg-transparent"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-black">
+                          Deletar
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </>
                 )}
               </TableCell>

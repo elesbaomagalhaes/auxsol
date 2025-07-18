@@ -1,0 +1,14 @@
+-- AlterTable
+ALTER TABLE "projeto" ADD COLUMN     "abr" DECIMAL(10,2),
+ADD COLUMN     "ago" DECIMAL(10,2),
+ADD COLUMN     "consumo" DECIMAL(10,2),
+ADD COLUMN     "dez" DECIMAL(10,2),
+ADD COLUMN     "fev" DECIMAL(10,2),
+ADD COLUMN     "jan" DECIMAL(10,2),
+ADD COLUMN     "jul" DECIMAL(10,2),
+ADD COLUMN     "jun" DECIMAL(10,2),
+ADD COLUMN     "mai" DECIMAL(10,2),
+ADD COLUMN     "mar" DECIMAL(10,2),
+ADD COLUMN     "nov" DECIMAL(10,2),
+ADD COLUMN     "out" DECIMAL(10,2),
+ADD COLUMN     "set" DECIMAL(10,2);

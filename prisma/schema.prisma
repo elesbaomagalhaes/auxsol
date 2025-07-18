@@ -9,6 +9,23 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model kit {
+  id                   String   @id @default(uuid())
+  status               String?  @default("a")
+  numProjeto           String 
+  tipo                 String   // Tipo do item: "modulo", "inversor", "protecaoCA", "stringBoxCC"
+  itemId               String   // ID do módulo, inversor, proteção CA ou string box CC
+  qtd                  Decimal @db.Decimal(10,2)
+  string               Decimal? @db.Decimal(5,0)
+  potenciaGerador      Decimal? @db.Decimal(10,2)
+  potenciaInversor     Decimal? @db.Decimal(10,2)                         
+  userId               String
+  user                 user     @relation(fields: [userId], references: [id])
+  cliente              cliente  @relation(fields: [numProjeto], references: [numProjeto])
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
 model acesso {
   id                   String   @id @default(uuid())
   numProjeto           String   @unique
@@ -27,12 +44,29 @@ model acesso {
   poste                String?
   longitudeUTM         String
   latitudeUTM          String
+  alocacaoCredito      String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime
-  cliente              cliente  @relation(fields: [numProjeto], references: [numProjeto])
+  clienteCpf           String @unique
+  client               cliente?    @relation(fields: [clienteCpf], references: [cpf])
   userId               String?
   user                 user?    @relation(fields: [userId], references: [id])
-  projetos             projeto[]
+  projeto              projeto[]
+  rateios              rateio[]
+}
+
+model rateio {
+  id                   String   @id @default(uuid())
+  status               String?  @default("a")
+  numProjeto           String
+  ccontrato            String
+  classConsumo         String
+  logradouro           String
+  acesso               acesso  @relation(fields: [numProjeto], references: [numProjeto])
+  userId               String
+  user                 user     @relation(fields: [userId], references: [id])
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 model cliente {
@@ -52,9 +86,12 @@ model cliente {
   cidade           String
   uf               String
   cep              String
-  numProjeto       String   @unique
+  fotoRG           String?
+  fotoMedidor      String?
+  numProjeto       String?   @unique
   acesso           acesso?
   projetos         projeto[]
+  kits             kit[]     // Relação com os kits do cliente
   userId           String?
   user             user?    @relation(fields: [userId], references: [id])
 }
@@ -81,6 +118,9 @@ model user {
   clientes    cliente[]
   acessos     acesso[]
   projetos    projeto[]
+  kits        kit[]           // Relação com os kits do usuário
+  bibliotecas biblioteca[]     // Relação com as bibliotecas do usuário
+  rateios     rateio[]
 }
 
 model tecnico {
@@ -104,6 +144,7 @@ model tecnico {
   userId           String?
   user             user?    @relation(fields: [userId], references: [id])
   projetos         projeto[]
+
 }
 
 model stringBoxCC {
@@ -150,24 +191,54 @@ model protecaoCA {
 
 model projeto {
   id                String      @id @default(uuid())
-  potenciaGeracao   Decimal     @db.Decimal(10,2)
-  potenciaInversor Decimal    @db.Decimal(10,2)
-  quantidadeModulo Int
-  quantidadeInversore Int
+  status            String      @default("a")
+  numProjeto        String      @unique
+  potenciaGerador   Decimal     @db.Decimal(10,2)
+  potenciaInversor Decimal      @db.Decimal(10,2)
+  consumo           Decimal?    @db.Decimal(10,2)
+  jan               Decimal?    @db.Decimal(10,2)
+  fev               Decimal?    @db.Decimal(10,2)
+  mar               Decimal?    @db.Decimal(10,2)
+  abr               Decimal?    @db.Decimal(10,2)
+  mai               Decimal?    @db.Decimal(10,2)
+  jun               Decimal?    @db.Decimal(10,2)
+  jul               Decimal?    @db.Decimal(10,2)
+  ago               Decimal?    @db.Decimal(10,2)
+  set               Decimal?    @db.Decimal(10,2)
+  out               Decimal?    @db.Decimal(10,2)
+  nov               Decimal?    @db.Decimal(10,2)
+  dez               Decimal?    @db.Decimal(10,2)
+  disjuntorPadrao   Int?        @default(1)
+  sessaoCondutor    Int?        @default(1)
+  numFases           Int?        @default(1)
+  numeroPoloDisjuntor Int?
+  urlMapa           String?
+  urlDoc            String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-  clienteId         String
-  cliente           cliente     @relation(fields: [clienteId], references: [id])
-  moduloId          String
-  modulo            modulo      @relation(fields: [moduloId], references: [id])
-  inversorId        String
-  inversor          inversor    @relation(fields: [inversorId], references: [id])
-  tecnicoId         String
-  tecnico           tecnico     @relation(fields: [tecnicoId], references: [id])
-  acessoId          String
-  acesso            acesso      @relation(fields: [acessoId], references: [id])
+  clienteCpf        String
+  cliente           cliente     @relation(fields: [clienteCpf], references: [cpf])
+  tecnicoCpf        String
+  tecnico           tecnico     @relation(fields: [tecnicoCpf], references: [cpf])
+  acessoCpf         String
+  acesso            acesso      @relation(fields: [acessoCpf], references: [clienteCpf])
   userId            String?
   user              user?       @relation(fields: [userId], references: [id])
+  anexos            anexo[]
+  cargasInstalada  cargaInstalada[]
+}
+
+model anexo {
+  id                  String   @id @default(uuid())
+  projetoId           String
+  fileName            String
+  fileSize            Int
+  fileType            String
+  cloudinaryUrl       String
+  cloudinaryPublicId  String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  projeto             projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
 }
  
 model account {
@@ -252,8 +323,8 @@ model modulo {
   area                Decimal @db.Decimal(8,2)
   peso                Decimal @db.Decimal(8,2)
   createdAt           DateTime @default(now())
-  updatedAt           DateTime 
-  projetos            projeto[]
+  updatedAt           DateTime @updatedAt
+
   userId              String?
   user                user?     @relation(fields: [userId], references: [id])
 }
@@ -282,11 +353,69 @@ model inversor {
   tensaoMaxsSai       String
   tensaoMinSai        String
   eficiencia          Decimal @db.Decimal(10,2)
-  typeInv             String
+  tipoInv             String?
+  tipoLigacao         String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  projetos            projeto[]
+
   userId              String?
   user                user?     @relation(fields: [userId], references: [id])
 }
-        
+
+model concessionaria {
+  id                   String   @id @default(uuid())
+  status               String @default("a")
+  nome                 String
+  sigla                String
+  estado               String
+  normaTecnica         String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model uf {
+  id                   String   @id @default(uuid())
+  status               String @default("a")
+  nome                 String
+  sigla                String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model equipamento {
+  id                   String   @id @default(uuid())
+  status                String @default("a")
+  descricao             String
+  tipo                  String
+  potencia              Decimal @db.Decimal(8,2)
+  fatorPotencia         Decimal @db.Decimal(8,2)
+  tensao                Decimal @db.Decimal(8,2)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  cargasInstaladas     cargaInstalada[]
+}
+
+model cargaInstalada {
+  id                   String   @id @default(uuid())
+  status               String @default("a")
+  numProjeto           String
+  idEquipamento        String
+  qtd                  Decimal @db.Decimal(3,2)
+  potenciaW            Decimal @db.Decimal(8,2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  projeto              projeto @relation(fields: [numProjeto], references: [numProjeto])
+  equipamento          equipamento @relation(fields: [idEquipamento], references: [id])
+}
+
+model biblioteca {
+  id                   String   @id @default(uuid())
+  status               String @default("a")
+  descricao             String
+  tipo                  String
+  url                   String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  userId                String?
+  user                  user?    @relation(fields: [userId], references: [id])
+}

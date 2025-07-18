@@ -1,0 +1,107 @@
+{
+  "tensaoRede": [
+    { "id": 1, "sigla": "127V", "descricao": "127 V" },
+    { "id": 2, "sigla": "220V", "descricao": "220 V" },
+    { "id": 3, "sigla": "380V", "descricao": "380 V" }
+  ],
+  "subgrupoConexao": [
+    { "id": 1, "sigla": "B1", "descricao": "B1" },
+    { "id": 2, "sigla": "B2", "descricao": "B2" },
+    { "id": 3, "sigla": "B3", "descricao": "B3" },
+    { "id": 4, "sigla": "B4", "descricao": "B4" }
+  ],
+  "tipoConexao": [
+    { "id": 2, "sigla": "BI", "descricao": "BIFÁSICO" },
+    { "id": 1, "sigla": "MONO", "descricao": "MONOFÁSICO" },
+    { "id": 3, "sigla": "TRI", "descricao": "TRIFÁSICO" }
+  ],
+  "tipoSolicitacao": [
+    {
+        "id": 4,
+        "sigla": "AUMENTO_GD_EXISTENTE",
+        "descricao": "AUMENTO DA POTÊNCIA DE GERAÇÃO EM UC COM GD EXISTENTE"
+      },
+      {
+        "id": 2,
+        "sigla": "GD_SEM_AUMENTO",
+        "descricao": "CONEXÃO DE GD EM UNIDADE CONSUMIDORA EXISTENTE SEM AUMENTO DE POTÊNCIA DISPONIBILIZADA"
+      },
+      {
+        "id": 3,
+        "sigla": "GD_COM_AUMENTO",
+        "descricao": "CONEXÃO DE GD EM UNIDADE CONSUMIDORA EXISTENTE COM AUMENTO DE POTÊNCIA DISPONIBILIZADA"
+      },
+      {
+        "id": 1,
+        "sigla": "LNUC_GD",
+        "descricao": "LIGAÇÃO NOVA DE UNIDADE CONSUMIDORA COM GERAÇÃO DISTRIBUÍDA"
+      }
+  ],
+  "tipoRamal": [
+    { "id": 1, "sigla": "AER", "descricao": "AÉREO" },
+    { "id": 2, "sigla": "SUB", "descricao": "SUBTERRÂNEO" }
+  ],
+  "ramoAtividade": [
+    { "id": 2, "sigla": "COM", "descricao": "COMERCIAL" },
+    { "id": 3, "sigla": "IND", "descricao": "INDUSTRIAL" },
+    { "id": 1, "sigla": "RES", "descricao": "RESIDENCIAL" },
+    { "id": 4, "sigla": "RUR", "descricao": "RURAL" },
+    { "id": 5, "sigla": "PUB", "descricao": "SERVIÇO PÚBLICO" }
+  ],
+  "enquadramentoGeracao": [
+    {
+      "id": 2,
+      "sigla": "AUT_REMOTO",
+      "descricao": "AUTOCONSUMO REMOTO"
+    },
+    {
+      "id": 1,
+      "sigla": "COMP_LOCAL",
+      "descricao": "COMPENSAÇÃO LOCAL"
+    },
+    {
+      "id": 4,
+      "sigla": "EMP_MULTIUC",
+      "descricao": "EMPREENDIMENTO DE MÚLTIPLAS UNIDADES"
+    },
+    {
+      "id": 3,
+      "sigla": "GER_COMP",
+      "descricao": "GERAÇÃO COMPARTILHADA"
+    }
+  ],
+  "tipoGeracao": [
+    {
+      "id": 2,
+      "sigla": "COM_INVERSOR",
+      "descricao": "EMPREGANDO CONVERSOR ELETRÔNICO/INVERSOR"
+    },
+    {
+      "id": 1,
+      "sigla": "SINCRO_SEM_INVERSOR",
+      "descricao": "EMPREGANDO MÁQUINA SÍNCRONA SEM CONVERSOR"
+    },
+    {
+      "id": 3,
+      "sigla": "MISTA",
+      "descricao": "MISTA"
+    },
+    {
+      "id": 4,
+      "sigla": "OUTRA",
+      "descricao": "OUTRA (especificar ao lado)"
+    }
+  ],
+  "alocacaoCredito": [
+    {
+      "id": 1,
+      "sigla": "ORDEM_PRIORIDADE",
+      "descricao": "Ordem de Prioridade"
+    },
+    {
+      "id": 2,
+      "sigla": "PERCENTUAL_EXCEDENTE",
+      "descricao": "Percentual do Excedente"
+    }
+  ]
+}

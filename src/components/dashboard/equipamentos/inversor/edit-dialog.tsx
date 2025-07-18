@@ -10,16 +10,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect, KeyboardEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { inversorSchema, type InversorSchema } from "@/lib/schema/inversorSchema";
 import  type { Inversor } from "../types";
 import { toast } from "sonner";
-import { Loader2, Info } from "lucide-react"; // Added Info
+import { Loader2 } from "lucide-react"; // Added Info
 import { Separator } from "@/components/ui/separator"; // Added Separator
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip imports
+
 import {
   Form,
   FormControl,
@@ -28,6 +27,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import  { ButtonTypeInversor }  from "@/components/dashboard/equipamentos/inversor/buttonType-inversor"
+import {useRouter} from "next/navigation";
 
 
 type EditDialogProps = {
@@ -36,6 +37,7 @@ type EditDialogProps = {
   inversorData: Inversor | null;
   onSave: (data: Inversor) => void;
 };
+
 
 
 // START: Adicionar funções helper para máscara de input
@@ -91,9 +93,9 @@ export function EditInversorDialog({
   inversorData,
   onSave,
 }: EditDialogProps) {
+
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Inicializar o formulário com React Hook Form e validação Zod
+  const router = useRouter();
   const form = useForm<InversorSchema>({
     resolver: zodResolver(inversorSchema),
     defaultValues: {
@@ -114,6 +116,7 @@ export function EditInversorDialog({
       correnteMaxSai: "",
       tensaoNomSai: "",
       THD: "",
+      tipoInv: "", // Mantém o default para o schema, será populado pelo useEffect
       frequenciaNom: "",
       fatorPotencia: 0,
       tensaoMaxsSai: "",
@@ -122,36 +125,15 @@ export function EditInversorDialog({
     },
   });
 
-  // Atualizar o formulário quando stringBoxData mudar
   useEffect(() => {
-    if (inversorData) {
-      // Reset do formulário com os novos valores
+    
+    if (inversorData && form.formState.isDirty === false) {
       form.reset({
-      fabricante: inversorData.fabricante,
-      modelo: inversorData.modelo,
-      potenciaNomEnt: inversorData.potenciaNomEnt,
-      potenciaMaxEnt: inversorData.potenciaMaxEnt,
-      tensaoMaxEnt: inversorData.tensaoMaxEnt,
-      tensaoInic: inversorData.tensaoInic,
-      tensaoNomEnt: inversorData.tensaoNomEnt,
-      numeroEntMPPT: inversorData.numeroEntMPPT,
-      potenciaMaxMPPT: inversorData.potenciaMaxMPPT,
-      correnteMaxEnt: inversorData.correnteMaxEnt,
-      correnteMaxCurtCirc: inversorData.correnteMaxCurtCirc,
-      potenciaNomSai: inversorData.potenciaNomSai,
-      potenciaMaxSai: inversorData.potenciaMaxSai,
-      correnteNomSai: inversorData.correnteNomSai,
-      correnteMaxSai: inversorData.correnteMaxSai,
-      tensaoNomSai: inversorData.tensaoNomSai,
-      THD: inversorData.THD,
-      frequenciaNom: inversorData.frequenciaNom,
-      fatorPotencia: inversorData.fatorPotencia,
-      tensaoMaxsSai: inversorData.tensaoMaxsSai,
-      tensaoMinSai: inversorData.tensaoMinSai,
-      eficiencia: inversorData.eficiencia,
+        ...inversorData,
+        tipoInv: inversorData.tipoInv || "",
       });
     }
-  }, [inversorData, form]);
+  }, [inversorData]);
 
   const handleSubmit = async (data: InversorSchema) => {
     setIsLoading(true);
@@ -185,8 +167,9 @@ export function EditInversorDialog({
       setTimeout(() => {
         onOpenChange(false);
         // Redirecionar para a página de gerenciamento para recarregar a tabela
-        window.location.href = "/dashboard/equipamentos/inversor";
+        router.push("/dashboard/equipamentos/inversor");
       }, 1500);
+
     } catch (error) {
       console.error("Erro ao atualizar Inversor:", error);
       toast.error("Não foi possível atualizar o Inversor. Tente novamente.");
@@ -207,10 +190,18 @@ export function EditInversorDialog({
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-12 md:grid-cols-12 gap-4 py-4">
-              <div className="col-span-12 gap-4 space-y-2">
-                <h2 className="font-bold">- Entradas</h2>
-                <Separator />
-              </div>
+        <div className="col-span-12 md:col-span-12 space-y-2 gap-4">
+          <ButtonTypeInversor
+            name="tipoInv"
+            control={form.control}
+            options={[
+              { label: "Inversor", value: "inv" },
+              { label: "Microinversor", value: "micro" },
+                      ]}
+            label="Tipo de Inversor"
+          />
+          </div>
+
               <div className="col-span-6 md:col-span-6 space-y-2 gap-4">
                 <FormField
                   control={form.control}
