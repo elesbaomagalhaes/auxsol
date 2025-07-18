@@ -100,7 +100,7 @@ export function FormCadastroUser() {
 
       // Pequeno atraso para o usuário ver o toast antes do redirecionamento
       setTimeout(() => {
-        router.push("/sing-in");
+        router.push("/sign-in");
         router.refresh();
       }, 2000);
     } catch (error) {

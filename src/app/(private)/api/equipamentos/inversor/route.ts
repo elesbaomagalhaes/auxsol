@@ -1,93 +1,94 @@
-
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { inversorSchema } from "@/lib/schema/inversorSchema";
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import prisma from '@/lib/prisma'
+import { inversorSchema } from '@/lib/schema/inversorSchema'
 
 /**
- * API route para salvar uma nova Inversor
+ * API route para salvar um novo inversor
  * Esta rota recebe os dados do formulário e os salva no banco de dados
  * usando o Prisma ORM
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session) {
+    // Verificar autenticação
+    const session = await auth()
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { error: "Não autorizado" },
+        { error: 'Não autorizado' },
         { status: 401 }
-      );
+      )
     }
 
     // Obter dados JSON do corpo da requisição
-    const body = await request.json();
+    const body = await request.json()
     
     // Validar dados usando o schema Zod
-    const validatedData = inversorSchema.safeParse(body);
+    const validatedData = inversorSchema.safeParse(body)
     
     if (!validatedData.success) {
-       // Log dos dados antes de salvar
-     console.log("Dados da Inversor a serem salvos:", validatedData.error.flatten());
-      return NextResponse.json({
-        success: false,
-        message: "Erro de validação",
-        errors: validatedData.error.flatten()
-      }, { status: 400 });
+      return NextResponse.json(
+        { 
+          error: 'Dados inválidos',
+          details: validatedData.error.errors
+        },
+        { status: 400 }
+      )
     }
-    // Log dos dados antes de salvar
-    console.log("Dados da Inversor a serem salvos:", validatedData);
-    
-    // Criar o registro no banco de dados
-    // O schema Zod (protecaoCASchema) já deve garantir que validatedData
-    // tem os campos e tipos corretos para o modelo Prisma ProtecaoCA.
-    // O campo 'id', se presente em validatedData e não desejado na criação,
-    // deve ser omitido pelo schema Zod ou não incluído no spread.
-    // Assumindo que protecaoCASchema não inclui 'id' ou o Prisma o ignora na criação.
-    const criaInversor = await prisma.inversor.create({
+
+    // Criar o inversor no banco de dados
+    const novoInversor = await prisma.inversor.create({
       data: {
         ...validatedData.data,
-         userId: session.user.id
+        userId: session.user.id
+      }
+    })
+
+    return NextResponse.json(
+      { 
+        message: 'Inversor salvo com sucesso!',
+        inversor: novoInversor
       },
-    });
-
-    console.log("Novo Inversor criada:", criaInversor);
-    // Redirecionar para a página de listagem após sucesso
-    return NextResponse.redirect(
-      new URL("/dashboard/equipamentos/inversor", request.url)
-    );
+      { status: 201 }
+    )
   } catch (error) {
-    console.error("Erro ao criar Inversor:", error);
-    
-    // Verificar se é um erro de validação do Zod
-    if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message
-      }));
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: "Erro de validação", 
-        errors: errorMessages 
-      }, { status: 400 });
-    }
-    
-    // Verificar se é um erro de chave única
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json({
-        success: false,
-        message: `O campo ${(error as any).meta?.target?.[0] || 'desconhecido'} já está em uso`,
-      }, { status: 409 });
-    }
-    
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    console.error('Erro ao salvar inversor:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
+}
 
+/**
+ * API route para buscar inversores
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Verificar autenticação
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Não autorizado' },
+        { status: 401 }
+      )
+    }
+
+    // Buscar inversores do usuário
+    const inversores = await prisma.inversor.findMany({
+      where: {
+        userId: session.user.id
+      },
+      orderBy: {
+        fabricante: 'asc'
+      }
+    })
+
+    return NextResponse.json(inversores)
+  } catch (error) {
+    console.error('Erro ao buscar inversores:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
+}

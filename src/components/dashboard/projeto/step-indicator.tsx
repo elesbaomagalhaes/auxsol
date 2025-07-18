@@ -14,7 +14,7 @@ export default function StepIndicator({ steps, currentStep, stepIcons }: StepInd
         {steps.map((step, index) => {
           const isCompleted = index < currentStep
           const isActive = index === currentStep
-          const isFuture = index > currentStep
+          //const isFuture = index > currentStep
 
           return (
             <div key={index} className="flex items-center mb-2 md:mb-0">

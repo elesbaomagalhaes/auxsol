@@ -1,5 +1,4 @@
-import type { FormData } from "@/lib/schema/projeto"
-import { Separator } from "@radix-ui/react-separator"
+import type { FormData } from "@/lib/schema/projetoSchema"
 import { User, KeyRound, GalleryThumbnails, HardHat } from "lucide-react"
 
 interface ReviewStepProps {
@@ -58,7 +57,7 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
             <div>
               <p className="text-sm text-muted-foreground font-bold">Concessionária</p>
-              <p>{formData.conInfo}</p>
+              <p>{formData.concessionaria}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Conta Contrato</p>
@@ -66,35 +65,39 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Tensão da Rede</p>
-              <p>{formData.tnsRdeInfo}</p>
+              <p>{formData.tensaoRede}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Grupo de Conexão</p>
-              <p>{formData.gpoCnxInfo}</p>
+              <p>{formData.subgrupoConexao}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Tipo de Conexão</p>
-              <p>{formData.tpoCnxInfo}</p>
+              <p>{formData.tipoConexao}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Tipo de Solicitação</p>
-              <p>{formData.tpoSolInfo}</p>
+              <p>{formData.tipoSolicitacao}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Tipo de Ramal</p>
-              <p>{formData.tpoRmlInfo}</p>
+              <p>{formData.tipoRamal}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Ramo de Atividade</p>
-              <p>{formData.rmoAtiInfo}</p>
+              <p>{formData.ramoAtividade}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Enquadramento da Geração</p>
-              <p>{formData.enqGerInfo}</p>
+              <p>{formData.enquadramentoGeracao}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Tipo de Geração</p>
-              <p>{formData.tpoGerInfo}</p>
+              <p>{formData.tipoGeracao}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-bold">Alocação de Crédito</p>
+              <p>{formData.alocacaoCredito}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-bold">Poste</p>
@@ -111,61 +114,68 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <GalleryThumbnails className="h-5 w-5 text-bold" />
-            <h3 className="text-lg font-bold">Equipamento</h3>
+            <h3 className="text-lg font-bold">Equipamentos do Kit</h3>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
-            <div className="col-span-2">
-              <p className="text-sm text-muted-foreground font-bold">Módulos</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Fabricante</p>
-              <p>{formData.fbcModInfo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Potência (Wp)</p>
-              <p>{formData.ptcModInfo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Quantidade</p>
-              <p>{formData.qtdMod}</p>
-            </div>
-            <div className="col-span-2 mt-2">
-              <p className="text-sm text-muted-foreground font-bold">Inversores</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Fabricante</p>
-              <p>{formData.fbcInvInfo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Potência (kWp)</p>
-              <p>{formData.ptcInvInfo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Quantidade</p>
-              <p>{formData.qtdInv}</p>
-            </div>
-            <div className="col-span-2 mt-2">
-              <p className="text-sm text-muted-foreground font-bold">Stringbox CC</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Modelo</p>
-              <p>{formData.mdlStrCCInfo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Quantidade</p>
-              <p>{formData.qtdStrCC}</p>
-            </div>
-            <div className="col-span-2 mt-2">
-              <p className="text-sm text-muted-foreground font-bold">Stringbox CA</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Modelo</p>
-              <p>{formData.mdlStrCAInfo}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-bold">Quantidade</p>
-              <p>{formData.qtdStrCA}</p>
-            </div>
+          <div className="space-y-4">
+            {formData.equipamentosKit && formData.equipamentosKit.length > 0 ? (
+              <div className="grid grid-cols-5 gap-4">
+                {(() => {
+                  // Ordenar equipamentos por tipo: Inversor, Módulo, Proteção CA, Proteção CC
+                  const tipoOrdem = ['inversor', 'modulo', 'protecaoCA', 'protecaoCC'];
+                  const equipamentosOrdenados = [...formData.equipamentosKit].sort((a, b) => {
+                    const indexA = tipoOrdem.indexOf(a.tipo);
+                    const indexB = tipoOrdem.indexOf(b.tipo);
+                    return indexA - indexB;
+                  });
+                  
+                  return equipamentosOrdenados.map((equipamento: any, index: number) => (
+                    <div key={equipamento.id || index} className="border rounded-lg p-4">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm text-muted-foreground font-bold mb-1">
+                            {equipamento.tipo === 'modulo' && 'Módulo'}
+                            {equipamento.tipo === 'inversor' && 'Inversor'}
+                            {equipamento.tipo === 'protecaoCA' && 'Proteção CA'}
+                            {equipamento.tipo === 'protecaoCC' && 'Proteção CC'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-bold">--</p>
+                          <p className="text-sm">{equipamento.nome}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-bold">Modelo</p>
+                          <p className="text-sm">{equipamento.modelo}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-bold">Fabricante</p>
+                          <p className="text-sm">{equipamento.fabricante}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-bold">Quantidade</p>
+                          <p className="text-sm">{equipamento.quantidade}</p>
+                        </div>
+                        {equipamento.potencia && (
+                          <div>
+                            <p className="text-xs text-muted-foreground font-bold">Potência</p>
+                            <p className="text-sm">{equipamento.potencia} {equipamento.tipo === 'modulo' ? 'Wp' : 'kW'}</p>
+                          </div>
+                        )}
+                        {equipamento.stringSelecionada && (
+                          <div>
+                            <p className="text-xs text-muted-foreground font-bold">String</p>
+                            <p className="text-sm">{equipamento.stringSelecionada}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ));
+                })()
+                }
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Nenhum equipamento adicionado</p>
+            )}
           </div>
         </div>
 

@@ -1,0 +1,48 @@
+{
+  "tensaoRede": [
+    { "id": 1, "sigla": "127", "nome": "127 V" },
+    { "id": 2, "sigla": "220", "nome": "220 V" },
+    { "id": 3, "sigla": "380", "nome": "380 V" },
+    { "id": 4, "sigla": "440", "nome": "440 V" }
+  ],
+  "grupoConexao": [
+    { "id": 1, "sigla": "mono", "nome": "MONOFÁSICO" },
+    { "id": 2, "sigla": "bi", "nome": "BIFÁSICO" },
+    { "id": 3, "sigla": "tri", "nome": "TRIFÁSICO" }
+  ],
+  "tipoConexao": [
+    { "id": 1, "sigla": "nova", "nome": "Nova Conexão" },
+    { "id": 2, "sigla": "existente", "nome": "Conexão Existente" },
+    { "id": 3, "sigla": "ampliacao", "nome": "Ampliação" }
+  ],
+  "tipoSolicitacao": [
+    { "id": 1, "sigla": "acesso", "nome": "Solicitação de Acesso" },
+    { "id": 2, "sigla": "parecer", "nome": "Parecer de Acesso" },
+    { "id": 3, "sigla": "vistoria", "nome": "Vistoria" },
+    { "id": 4, "sigla": "ligacao", "nome": "Ligação" }
+  ],
+  "tipoRamal": [
+    { "id": 1, "sigla": "aereo", "nome": "Aéreo" },
+    { "id": 2, "sigla": "subterraneo", "nome": "Subterrâneo" },
+    { "id": 3, "sigla": "misto", "nome": "Misto" }
+  ],
+  "ramoAtividade": [
+    { "id": 1, "sigla": "residencial", "nome": "Residencial" },
+    { "id": 2, "sigla": "comercial", "nome": "Comercial" },
+    { "id": 3, "sigla": "industrial", "nome": "Industrial" },
+    { "id": 4, "sigla": "rural", "nome": "Rural" },
+    { "id": 5, "sigla": "publico", "nome": "Serviço Público" }
+  ],
+  "enquadramentoGeracao": [
+    { "id": 1, "sigla": "micro", "nome": "Microgeração (até 75 kW)" },
+    { "id": 2, "sigla": "mini", "nome": "Minigeração (75 kW a 5 MW)" },
+    { "id": 3, "sigla": "pequena", "nome": "Pequena Central (5 MW a 30 MW)" }
+  ],
+  "tipoGeracao": [
+    { "id": 1, "sigla": "solar", "nome": "Solar Fotovoltaica" },
+    { "id": 2, "sigla": "eolica", "nome": "Eólica" },
+    { "id": 3, "sigla": "hidrica", "nome": "Hídrica" },
+    { "id": 4, "sigla": "biomassa", "nome": "Biomassa" },
+    { "id": 5, "sigla": "biogas", "nome": "Biogás" }
+  ]
+}

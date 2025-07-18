@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { inversorSchema } from "@/lib/schema/inversorSchema"
 import { toast } from "sonner"
+import { showEquipamentoSuccessToast } from "@/components/ui/success-toast"
 import { useState } from "react"
-import {  Building2, CreditCard, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import {
   Form,
   FormControl,
@@ -78,6 +79,7 @@ export const FormInversor = () => {
       correnteMaxSai: "",
       tensaoNomSai: "",
       THD: "",
+      tipoInv: "",
       frequenciaNom: "",
       fatorPotencia: 0,
       tensaoMaxsSai: "",
@@ -105,7 +107,7 @@ export const FormInversor = () => {
       }
 
       // Mostrar mensagem de sucesso e redirecionar
-      toast.success("Dados salvos com sucesso!")
+      showEquipamentoSuccessToast("Inversor", `${data.fabricante} ${data.modelo}`)
 
       setTimeout(() => {
         window.location.href = "/dashboard/equipamentos/inversor"
@@ -123,52 +125,72 @@ export const FormInversor = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-12 md:grid-cols-12 gap-4">
-        <div className="col-span-4 gap-4 space-y-2">
-        <div className="flex gap-4 mb-6">
-          <label
-            className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-              selectedMethod === "inver"
-                ? "border-stone-700 bg-white"
-                : "border-gray-200 bg-gray-50 hover:bg-gray-100"
-            }`}
-          >
-            <input
-              type="radio"
-              name="typeInv"
-              value="inver"
-              checked={selectedMethod === "inver"}
-              onChange={(e) => setSelectedMethod(e.target.value)}
-              className="sr-only"
-            />
-            <div className="flex flex-col items-center gap-2">
-             
-              <span className="text-sm font-medium text-gray-900">Inversor</span>
-            </div>
-          </label>
-
-          <label
-            className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-              selectedMethod === "micro"
-                ? "border-stone-700 bg-white"
-                : "border-gray-200 bg-gray-50 hover:bg-gray-100"
-            }`}
-          >
-            <input
-              type="radio"
-              name="typeInv"
-              value="micro"
-              checked={selectedMethod === "micro"}
-              onChange={(e) => setSelectedMethod(e.target.value)}
-              className="sr-only"
-            />
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-sm font-medium text-gray-900">Microinversor</span>
-            </div>
-          </label>
-        </div>
-        </div>
     
-        <div className="col-span-6 md:col-span-8 space-y-2 gap-4">
+        <div className="col-span-6 md:col-span-6 gap-4 ">
+
+              <FormField
+                control={form.control}
+                name="tipoInv"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormControl>
+                      <div className="flex gap-4">
+                        <label
+                          className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                            field.value === "inv"
+                              ? "border-stone-700 bg-white"
+                              : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            {...field}
+                            value="inv"
+                            name="tipoInv"
+                            checked={field.value === "inv"}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              setSelectedMethod(e.target.value); // Sincroniza o estado visual
+                            }}
+                            className="sr-only"
+                          />
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">Inversor</span>
+                          </div>
+                        </label>
+
+                        <label
+                          className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                            field.value === "mic"
+                              ? "border-stone-700 bg-white"
+                              : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            {...field}
+                            value="mic"
+                            name="tipoInv"
+                            checked={field.value === "mic"}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              setSelectedMethod(e.target.value); // Sincroniza o estado visual
+                            }}
+                            className="sr-only"
+                          />
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">Microinversor</span>
+                          </div>
+                        </label>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+    
+        <div className="col-span-6 md:col-span-6 space-y-2 gap-4">
           <FormField
             control={form.control}
             name="fabricante"

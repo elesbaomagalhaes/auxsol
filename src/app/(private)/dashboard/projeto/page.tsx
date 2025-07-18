@@ -1,8 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { auth } from "@/lib/auth";
-import { Users, Wrench, Package, KeyRound, BarChart3 } from "lucide-react"
-import ClienteTable from "@/components/dashboard/cliente/cliente-table";
-import { columns } from "@/components/dashboard/cliente/columns";
+
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma";
 import MultiStepForm from "@/components/dashboard/projeto/multi-step-form";
@@ -33,9 +31,6 @@ export default async function Dashboard() {
 
       <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-12">
         <Card className="col-span-12">
-          <CardHeader>
-            <CardTitle>Cadastro de etapas</CardTitle>
-          </CardHeader>
           <CardContent className="px-4">
             <div className="h-full w-full">
               <MultiStepForm />

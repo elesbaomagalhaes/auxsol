@@ -1,97 +1,92 @@
-
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { z } from "zod";
 import { moduloFormSchema } from "@/lib/schema/moduloSchema";
 
-/**
- * API route para salvar uma nova Inversor
- * Esta rota recebe os dados do formulário e os salva no banco de dados
- * usando o Prisma ORM
- */
-
-export async function POST(request: NextRequest) {
+// GET - Buscar módulos
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-
-    if (!session) {
+    
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Não autorizado" },
         { status: 401 }
       );
     }
 
-    // Obter dados JSON do corpo da requisição
+    const { searchParams } = new URL(request.url);
+    const clienteId = searchParams.get("clienteId");
+
+    const whereClause = clienteId 
+      ? { userId: clienteId }
+      : { userId: session.user.id };
+
+    const modulos = await prisma.modulo.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(modulos);
+  } catch (error) {
+    console.error("Erro ao buscar módulos:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Criar novo módulo
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     
-    // Validar dados usando o schema Zod
+    // Validar dados com Zod
     const validatedData = moduloFormSchema.safeParse(body);
     
     if (!validatedData.success) {
-       // Log dos dados antes de salvar
-     console.log("Dados da Modulo a serem salvos:", validatedData.error.flatten());
-      return NextResponse.json({
-        success: false,
-        message: "Erro de validação",
-        errors: validatedData.error.flatten()
-      }, { status: 400 });
+      return NextResponse.json(
+        { 
+          error: "Dados inválidos",
+          details: validatedData.error.errors
+        },
+        { status: 400 }
+      );
     }
-    // Log dos dados antes de salvar
-    console.log("Dados da Modulo a serem salvos:", validatedData);
-    
-    // Criar o registro no banco de dados
-    // O schema Zod (protecaoCASchema) já deve garantir que validatedData
-    // tem os campos e tipos corretos para o modelo Prisma ProtecaoCA.
-    // O campo 'id', se presente em validatedData e não desejado na criação,
-    // deve ser omitido pelo schema Zod ou não incluído no spread.
-    // Assumindo que protecaoCASchema não inclui 'id' ou o Prisma o ignora na criação.
-    const criaModulo = await prisma.modulo.create({
+
+    // Criar módulo no banco de dados
+    const novoModulo = await prisma.modulo.create({
       data: {
         ...validatedData.data,
         userId: session.user.id,
-        seloInmetro: validatedData.data.seloInmetro || "",
-        datasheet: validatedData.data.datasheet || "",
         updatedAt: new Date(),
       },
     });
 
-    console.log("Novo modulo criada:", criaModulo);
-    // Redirecionar para a página de listagem após sucesso
-    return NextResponse.redirect(
-      new URL("/dashboard/equipamentos/modulo", request.url)
+    return NextResponse.json(
+      { 
+        message: "Módulo criado com sucesso",
+        modulo: novoModulo
+      },
+      { status: 201 }
     );
   } catch (error) {
-    console.error("Erro ao criar Modulo:", error);
-    
-    // Verificar se é um erro de validação do Zod
-    if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message
-      }));
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: "Erro de validação", 
-        errors: errorMessages 
-      }, { status: 400 });
-    }
-    
-    // Verificar se é um erro de chave única
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json({
-        success: false,
-        message: `O campo ${(error as any).meta?.target?.[0] || 'desconhecido'} já está em uso`,
-      }, { status: 409 });
-    }
-    
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    console.error("Erro ao criar módulo:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
   }
-
-  }
+}

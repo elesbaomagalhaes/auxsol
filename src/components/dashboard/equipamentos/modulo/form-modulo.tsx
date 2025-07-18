@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { moduloFormSchema } from "@/lib/schema/moduloSchema"
 import { toast } from "sonner"
+import { showEquipamentoSuccessToast } from "@/components/ui/success-toast"
 import { useState, useEffect } from "react" // Adicionado useEffect
 import {  Loader2 } from "lucide-react"
 import {
@@ -115,7 +116,7 @@ export const FormModulo = () => {
       }
 
       // Mostrar mensagem de sucesso e redirecionar
-      toast.success("Módulo salvo com sucesso!") 
+      showEquipamentoSuccessToast("Módulo", `${data.fabricante} ${data.modelo}`) 
 
       setTimeout(() => {
         window.location.href = "/dashboard/equipamentos/modulo"

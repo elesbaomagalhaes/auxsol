@@ -9,6 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Trash2, Edit, Plus, Loader2 } from "lucide-react"; // Added Loader2
 import { useState } from "react";
 import { toast } from "sonner"; // Added toast
@@ -133,14 +139,24 @@ export function ModuloTable({ data }: moduloTableProps) {
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="icon" 
-                      aria-label="Deletar Poteção CA"
-                      onClick={() => handleDeleteClick(Inv.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            aria-label="Deletar Módulo"
+                            onClick={() => handleDeleteClick(Inv.id)}
+                            className="hover:bg-transparent"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-black">
+                          Deletar
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </>
                 )}
               </TableCell>

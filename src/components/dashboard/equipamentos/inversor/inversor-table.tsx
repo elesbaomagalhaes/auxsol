@@ -9,6 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Trash2, Edit, Plus, Loader2 } from "lucide-react"; // Added Loader2
 import { useState } from "react";
 import { toast } from "sonner"; // Added toast
@@ -91,8 +97,8 @@ export function InversorTable({ data }: inversorTableProps) {
           <TableRow>
           <TableHead>Fabricante</TableHead>
             <TableHead>Modelo</TableHead>
-            <TableHead>Pot. Nominal - Entrada (kWp) / Saída (kWp)</TableHead>
-            <TableHead>Núm. MPPT</TableHead>
+            <TableHead>Pot. Nom - Entrada (kWp) / Saída (kWp) / MPPT</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -101,8 +107,8 @@ export function InversorTable({ data }: inversorTableProps) {
             <TableRow key={Inv.id}>
               <TableCell className="font-medium">{Inv.fabricante}</TableCell>
               <TableCell>{`${Inv.modelo}`}</TableCell>
-              <TableCell>{`E: ${Inv.potenciaNomEnt} kWp / S: ${Inv.potenciaNomSai} kWp`}</TableCell>
-              <TableCell>{Inv.numeroEntMPPT}</TableCell>
+              <TableCell>{`${Inv.potenciaNomEnt} kWp | ${Inv.potenciaNomSai} kWp | ${Inv.numeroEntMPPT} MPPT`}</TableCell>
+              <TableCell>{(Inv.tipoInv === 'inv') ? 'Inversor' : 'Microinversor'}</TableCell>
               <TableCell className="text-right space-x-2">
                 {showDeleteConfirm === Inv.id ? (
                   <div className="flex justify-end space-x-2">
@@ -133,14 +139,24 @@ export function InversorTable({ data }: inversorTableProps) {
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="icon" 
-                      aria-label="Deletar Poteção CA"
-                      onClick={() => handleDeleteClick(Inv.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            aria-label="Deletar Inversor"
+                            onClick={() => handleDeleteClick(Inv.id)}
+                            className="hover:bg-transparent"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-black">
+                          Deletar
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </>
                 )}
               </TableCell>

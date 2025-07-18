@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import ClientInfoStep from "@/components/dashboard/projeto/steps/cliente-form-step"
 import AcessoInfoStep from "@/components/dashboard/projeto/steps/acesso-form-step"
-import EquipamentoInfoStep from "@/components/dashboard/projeto/steps/equipamento-form-step"
+import EquipamentoInfoStep from "@/components/dashboard/projeto/steps/kit-form-step"
 import TecnicoInfoStep from "@/components/dashboard/projeto/steps/tecnico-form-step"
 import ReviewStep from "@/components/dashboard/projeto/steps/review-step"
 import SucessoStep from "@/components/dashboard/projeto/steps/sucesso-step"
@@ -14,14 +14,13 @@ import {
   formSchema,
   clienteSchema,
   acessoSchema,
-  equipamentoSchema,
   tecnicoSchema,
   type FormData,
-} from "@/lib/schema/projeto"
+} from "@/lib/schema/projetoSchema"
 import {  z } from "zod"
 import { User, KeyRound, GalleryThumbnails, HardHat, ClipboardCheck } from "lucide-react"
-import { m } from "framer-motion"
 import { toast } from "sonner"
+import { showCelebrationToast } from "@/components/ui/success-toast"
 
 /**
  * @fileoverview Componente de formulário multi-etapas para cadastro de projetos
@@ -34,6 +33,7 @@ import { toast } from "sonner"
  * @type {FormData} Objeto contendo todos os campos do formulário inicializados como strings vazias
  */
 const initialFormData: FormData = {
+  // Cliente Schema fields
   nome: "",
   rgCnh: "",
   rgCnhDataEmissao: "",
@@ -48,58 +48,42 @@ const initialFormData: FormData = {
   cidade: "",
   uf: "",
   cep: "",
- concessionaria: "",
- contractNumber: "",
- tensaoRede: "",
- tnsRdeInfo: "",
- grupoConexao: "",
- gpoCnxInfo: "",
- tipoConexao: "",
- tpoCnxInfo: "",
- tipoSolicitacao: "",
- tpoSolInfo: "",
- tipoRamal: "",
- tpoRmlInfo: "",
- ramoAtividade: "",
- rmoAtiInfo: "",
- enquadramentoGeracao: "",
- enqGerInfo: "", // Adicione este campo para enquadramento de geração info
- tipoGeracao: "",
- tpoGerInfo: "",
- poste: "",
- longitudeUTM: "",
- latitudeUTM: "",
- fabricanteMod: "",
- fbcModInfo: "",
- potenciaMod: "",
- ptcModInfo: "",
- qtdMod: "",
- fabricanteInv: "",
- fbcInvInfo: "",
- potenciaInv: "",
- ptcInvInfo: "",
- qtdInv: "",
- modeloStrCC: "",
- mdlStrCCInfo: "",
- qtdStrCC: "",
- modeloStrCA: "",
- mdlStrCAInfo: "",
- qtdStrCA: "",
- nomeT: "",
- registro: "",
- foneT: "",
- cpfT: "",
- rgCnhT: "",
- tipoProfissional: "",
- tpoPrfInfo: "",
- emailT: "",
- logradouroT: "",
- numeroT: "",
- complementoT: "",
- bairroT: "",
- cidadeT: "",
- ufT: "",
- cepT: ""
+  
+  // Acesso Schema fields
+  concessionaria: "",
+  contractNumber: "",
+  tensaoRede: "",
+  subgrupoConexao: "",
+  tipoConexao: "",
+  tipoSolicitacao: "",
+  tipoRamal: "",
+  ramoAtividade: "",
+  enquadramentoGeracao: "",
+  tipoGeracao: "",
+  alocacaoCredito: "",
+  poste: "",
+  latitudeUTM: "",
+  longitudeUTM: "",
+  
+  // Tecnico Schema fields
+  nomeT: "",
+  registro: "",
+  rgCnhT: "",
+  cpfT: "",
+  foneT: "",
+  tipoProfissional: "",
+  tpoPrfInfo: "",
+  emailT: "",
+  logradouroT: "",
+  numeroT: "",
+  complementoT: "",
+  bairroT: "",
+  cidadeT: "",
+  ufT: "",
+  cepT: "",
+  
+  // Array de equipamentos (opcional)
+  equipamentosKit: []
 }
 
 
@@ -127,14 +111,19 @@ const stepIcons = {
   "Review": <ClipboardCheck className="h-4 w-4 mr-2" />
 }
 
+interface MultiStepFormProps {
+  projetoId?: string // ID do projeto para carregar dados existentes
+}
+
 /**
  * Componente de formulário multi-etapas
  * 
+ * @param {MultiStepFormProps} props - Props do componente
  * @returns {JSX.Element} Componente React que renderiza um formulário de várias etapas
  * com navegação, validação e submissão de dados
  */
-export default function MultiStepForm() {
-  const [currentStep, setCurrentStep] = useState(0)
+export default function MultiStepForm({ projetoId }: MultiStepFormProps) {
+  const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -157,6 +146,108 @@ export default function MultiStepForm() {
         delete newErrors[fieldName]
         return newErrors
       })
+    }
+  }
+
+  /**
+   * Verifica se a etapa atual é válida sem definir erros
+   * 
+   * @returns {boolean} Verdadeiro se a validação for bem-sucedida, falso caso contrário
+   */
+  const isCurrentStepValid = (): boolean => {
+    let schema: z.ZodType<any>
+    let dataToValidate: any = {}
+
+    // Seleciona o schema apropriado com base na etapa atual
+    switch (currentStep) {
+      case 0:
+        schema = clienteSchema
+        dataToValidate = {
+          numProjetoC: formData.numProjetoC,
+          nome: formData.nome,
+          rgCnh: formData.rgCnh,
+          rgCnhDataEmissao: formData.rgCnhDataEmissao,
+          cpf: formData.cpf,
+          fone: formData.fone,
+          email: formData.email,
+          numero: formData.numero,
+          rua: formData.rua,
+          complemento: formData.complemento,
+          bairro: formData.bairro,
+          cidade: formData.cidade,
+          uf: formData.uf,
+          cep: formData.cep,
+        }
+        break
+      case 1:
+        schema = acessoSchema
+        dataToValidate = {
+          concessionaria: formData.concessionaria,
+          contractNumber: formData.contractNumber,
+          tensaoRede: formData.tensaoRede,
+          subgrupoConexao: formData.subgrupoConexao,
+          tipoConexao: formData.tipoConexao,
+          tipoSolicitacao: formData.tipoSolicitacao,
+          tipoRamal: formData.tipoRamal,
+          ramoAtividade: formData.ramoAtividade,
+          enquadramentoGeracao: formData.enquadramentoGeracao,
+          tipoGeracao: formData.tipoGeracao,
+          alocacaoCredito: formData.alocacaoCredito,
+          poste: formData.poste,
+          longitudeUTM: formData.longitudeUTM,
+          latitudeUTM: formData.latitudeUTM,
+        }
+        break
+      case 2:
+        // Validação customizada para equipamentos
+        const equipamentos = formData.equipamentosKit || []
+        const temInversor = equipamentos.some((eq: any) => eq.tipo === 'inversor' && eq.quantidade > 0)
+        const temModulo = equipamentos.some((eq: any) => eq.tipo === 'modulo' && eq.quantidade > 0)
+        const temProtecaoCA = equipamentos.some((eq: any) => eq.tipo === 'protecaoCA' && eq.quantidade > 0)
+        
+        // Validação das strings
+        const inversores = equipamentos.filter((eq: any) => eq.tipo === 'inversor')
+        const modulos = equipamentos.filter((eq: any) => eq.tipo === 'modulo')
+        const totalMPPTs = inversores.reduce((total: number, inversor: any) => {
+          return total + (inversor.mppt || 0) * inversor.quantidade
+        }, 0)
+        
+        const stringsSelecionadas = modulos
+          .filter((modulo: any) => modulo.stringSelecionada)
+          .map((modulo: any) => parseInt(modulo.stringSelecionada.replace('String ', '')))
+          .filter((str: number) => !isNaN(str))
+        
+        const todasStringsAtribuidas = totalMPPTs > 0 && stringsSelecionadas.length === totalMPPTs
+        
+        return temInversor && temModulo && temProtecaoCA && todasStringsAtribuidas
+      case 3:
+        schema = tecnicoSchema
+        dataToValidate = {
+          nomeT: formData.nomeT,
+          registro: formData.registro,
+          rgCnhT: formData.rgCnhT,
+          cpfT: formData.cpfT, 
+          foneT: formData.foneT,
+          tipoProfissional: formData.tipoProfissional,
+          emailT: formData.emailT,
+          logradouroT: formData.logradouroT,
+          numeroT: formData.numeroT,
+          complementoT: formData.complementoT,
+          bairroT: formData.bairroT,
+          cidadeT: formData.cidadeT,
+          ufT: formData.ufT,
+          cepT: formData.cepT,
+        }
+        break
+      default:
+        return true
+    }
+
+    try {
+      schema.parse(dataToValidate)
+      return true
+    } catch (error) {
+      return false
     }
   }
 
@@ -196,33 +287,54 @@ export default function MultiStepForm() {
           concessionaria: formData.concessionaria,
           contractNumber: formData.contractNumber,
           tensaoRede: formData.tensaoRede,
-          grupoConexao: formData.grupoConexao,
+          subgrupoConexao: formData.subgrupoConexao,
           tipoConexao: formData.tipoConexao,
           tipoSolicitacao: formData.tipoSolicitacao,
           tipoRamal: formData.tipoRamal,
           ramoAtividade: formData.ramoAtividade,
           enquadramentoGeracao: formData.enquadramentoGeracao,
           tipoGeracao: formData.tipoGeracao,
+          alocacaoCredito: formData.alocacaoCredito,
           poste: formData.poste,
           longitudeUTM: formData.longitudeUTM,
           latitudeUTM: formData.latitudeUTM,
         }
         break
       case 2:
-        schema = equipamentoSchema
-        dataToValidate = {
-          fabricanteMod: formData.fabricanteMod,
-          potenciaMod: formData.potenciaMod,
-          qtdMod: formData.qtdMod,
-          fabricanteInv: formData.fabricanteInv,
-          potenciaInv: formData.potenciaInv,
-          qtdInv: formData.qtdInv,
-          modeloStrCC: formData.modeloStrCC,
-          qtdStrCC: formData.qtdStrCC,
-          modeloStrCA: formData.modeloStrCA,
-          qtdStrCA: formData.qtdStrCA,
+        // Validação customizada para equipamentos
+        const equipamentos = formData.equipamentosKit || []
+        const temInversor = equipamentos.some((eq: any) => eq.tipo === 'inversor' && eq.quantidade > 0)
+        const temModulo = equipamentos.some((eq: any) => eq.tipo === 'modulo' && eq.quantidade > 0)
+        const temProtecaoCA = equipamentos.some((eq: any) => eq.tipo === 'protecaoCA' && eq.quantidade > 0)
+        
+        // Validação das strings
+        const inversores = equipamentos.filter((eq: any) => eq.tipo === 'inversor')
+        const modulos = equipamentos.filter((eq: any) => eq.tipo === 'modulo')
+        const totalMPPTs = inversores.reduce((total: number, inversor: any) => {
+          return total + (inversor.mppt || 0) * inversor.quantidade
+        }, 0)
+        
+        const stringsSelecionadas = modulos
+          .filter((modulo: any) => modulo.stringSelecionada)
+          .map((modulo: any) => parseInt(modulo.stringSelecionada.replace('String ', '')))
+          .filter((str: number) => !isNaN(str))
+        
+        const todasStringsAtribuidas = totalMPPTs > 0 && stringsSelecionadas.length === totalMPPTs
+        
+        if (!temInversor || !temModulo || !temProtecaoCA || !todasStringsAtribuidas) {
+          const newErrors: Record<string, string> = {}
+          if (!temInversor) newErrors.inversor = "É necessário adicionar pelo menos um inversor"
+          if (!temModulo) newErrors.modulo = "É necessário adicionar pelo menos um módulo"
+          if (!temProtecaoCA) newErrors.protecaoCA = "É necessário adicionar pelo menos uma proteção CA"
+          if (!todasStringsAtribuidas && totalMPPTs > 0) {
+            const stringsNaoAtribuidas = totalMPPTs - stringsSelecionadas.length
+            newErrors.strings = `É necessário atribuir módulos a todas as ${totalMPPTs} strings disponíveis. Faltam ${stringsNaoAtribuidas} string(s).`
+          }
+          setErrors(newErrors)
+          return false
         }
-        break
+        setErrors({})
+        return true
       case 3:
         schema = tecnicoSchema
         dataToValidate = {
@@ -294,6 +406,7 @@ export default function MultiStepForm() {
   const handleSubmit = async () => {
     // Valida todos os dados do formulário antes do envio
     try {
+      console.log('Form data before validation:', formData)
       formSchema.parse(formData)
       
       // Exibe toast de carregamento
@@ -302,7 +415,7 @@ export default function MultiStepForm() {
       })
       
       // Envia os dados para a API
-      const response = await fetch("/api/projetos", {
+      const response = await fetch("/api/projeto", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -318,11 +431,8 @@ export default function MultiStepForm() {
       
       // Verifica se a resposta foi bem-sucedida
       if (response.ok) {
-        // Exibe mensagem de sucesso
-        toast.success("Projeto cadastrado com sucesso", {
-          description: "Todos os dados foram validados e o projeto foi salvo no banco de dados.",
-          duration: 5000
-        })
+        // Exibe mensagem de sucesso com animação especial
+        showCelebrationToast(formData.numProjetoC)
         
         // Avança para a etapa de conclusão
         setCurrentStep(steps.length)
@@ -364,8 +474,10 @@ export default function MultiStepForm() {
       }
     } catch (error) {
       console.error("Form validation failed:", error)
+      console.error('Validation error details:', error)
       
       if (error instanceof z.ZodError) {
+        console.log('Zod validation errors:', error.errors)
         // Extrai as mensagens de erro para exibição
         const errorMessages = error.errors.map(err => {
           const field = err.path.join('.') || 'Campo'
@@ -412,9 +524,16 @@ export default function MultiStepForm() {
       case 0:
         return <ClientInfoStep formData={formData} updateFormData={updateFormData} errors={errors} />
       case 1:
-        return <AcessoInfoStep formData={formData} updateFormData={updateFormData} errors={errors} />
+        return <AcessoInfoStep formData={formData} updateFormData={updateFormData} errors={errors} projetoId={projetoId} />
       case 2:
-        return <EquipamentoInfoStep formData={formData} updateFormData={updateFormData} errors={errors} />
+        return <EquipamentoInfoStep 
+          formData={formData} 
+          updateFormData={(field: string, value: any) => {
+            updateFormData(field as keyof FormData, value)
+          }}
+          errors={errors} 
+          projetoId={projetoId}
+        />
       case 3:
         return <TecnicoInfoStep formData={formData} updateFormData={updateFormData} errors={errors} />
       case 4:
@@ -441,9 +560,7 @@ export default function MultiStepForm() {
   return (
     <Card className="w-full h-full flex flex-col border-0 shadow-none p-0">
       <CardHeader className="px-0">
-        <div className="text-sm text-gray-500 mb-1">{currentStep < steps.length ? "Atual" : ""}</div>
         <CardTitle className="text-2xl">
-          
           {getStepTitle()}
           </CardTitle>
         <CardDescription>
@@ -462,9 +579,21 @@ export default function MultiStepForm() {
           </Button>
 
           {currentStep < steps.length - 1 ? (
-            <Button onClick={handleNext}>Próximo</Button>
+            <Button 
+              onClick={handleNext} 
+              disabled={!isCurrentStepValid()}
+              className={isCurrentStepValid() ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+            >
+              Próximo
+            </Button>
           ) : (
-            <Button onClick={handleSubmit}>Salvar</Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={!isCurrentStepValid()}
+              className={isCurrentStepValid() ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+            >
+              Salvar
+            </Button>
           )}
         </CardFooter>
       )}

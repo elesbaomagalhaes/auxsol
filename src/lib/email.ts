@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 // Inicializa o cliente Resend com a API key do ambiente
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 /**
  * Envia um e-mail com código de verificação para redefinição de senha
@@ -14,6 +14,12 @@ export async function sendPasswordResetEmail(email: string, code: string) {
     console.log('📧 Iniciando envio de e-mail de redefinição de senha:');
     console.log(`📧 Destinatário: ${email}`);
     console.log(`📧 Código de verificação: ${code}`);
+    
+    // Verifica se o Resend está configurado
+    if (!resend) {
+      console.warn('⚠️ RESEND_API_KEY não configurada. E-mail não será enviado.');
+      return { success: false, error: 'RESEND_API_KEY não configurada' };
+    }
     
     // Verifica se o código tem 6 dígitos
     if (!/^\d{6}$/.test(code)) {

@@ -1,173 +1,172 @@
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { inversorSchema } from "@/lib/schema/inversorSchema";
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import prisma from '@/lib/prisma'
+import { inversorSchema } from '@/lib/schema/inversorSchema'
 
 /**
- * API route para atualizar uma Inversor existente
- * Esta rota recebe os dados do formulário de edição e atualiza o registro no banco de dados
- * usando o Prisma ORM
+ * API route para atualizar um inversor específico
  */
-
-
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     // Verificar autenticação
-    const session = await auth();
-    if (!session) {
+    const session = await auth()
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Não autorizado" },
+        { error: 'Não autorizado' },
         { status: 401 }
-      );
+      )
     }
 
-    // Obter ID da Inversor a ser atualizada
-    const id = params.id;
-    
-    // Verificar se o ID é válido
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: "ID não fornecido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a Inversor existe
-    const existingProtrecaoCA = await prisma.inversor.findUnique({
-      where: { id },
-    });
-
-    if (!existingProtrecaoCA) {
-      return NextResponse.json(
-        { success: false, message: "Inversor não encontrada" },
-        { status: 404 }
-      );
-    }
-
-    // Obter dados JSON do corpo da requisição
-    const data = await request.json();
+    const { id } = await params
+    const body = await request.json()
     
     // Validar dados usando o schema Zod
-    const validatedData = inversorSchema.parse(data);
+    const validatedData = inversorSchema.safeParse(body)
     
-    // Log dos dados antes de atualizar
-    console.log("Dados da Inversor a serem atualizados:", validatedData);
-    
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { 
+          error: 'Dados inválidos',
+          details: validatedData.error.errors
+        },
+        { status: 400 }
+      )
+    }
 
-    // Verificar quais campos existem no modelo Prisma e incluir apenas esses na atualização
-    const updatedInversor = await prisma.inversor.update({
+    // Verificar se o inversor existe e pertence ao usuário
+    const inversorExistente = await prisma.inversor.findFirst({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    })
+
+    if (!inversorExistente) {
+      return NextResponse.json(
+        { error: 'Inversor não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Atualizar o inversor
+    const inversorAtualizado = await prisma.inversor.update({
       where: { id },
       data: {
-        ...validatedData,
-         updatedAt: new Date(),
-      },
-         
-    });
+        ...validatedData.data,
+      }
+    })
 
-    // Retornar resposta de sucesso com os dados atualizados
-    return NextResponse.json({ 
-      success: true, 
-      message: "Inversor atualizada com sucesso",
-      data: updatedInversor 
-    }, { status: 200 });
-    
+    return NextResponse.json(
+      { 
+        message: 'Inversor atualizado com sucesso!',
+        inversor: inversorAtualizado
+      },
+      { status: 200 }
+    )
   } catch (error) {
-    console.error("Erro ao atualizar Inversor:", error);
-    
-    // Verificar se é um erro de validação do Zod
-    if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message
-      }));
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: "Erro de validação", 
-        errors: errorMessages 
-      }, { status: 400 });
-    }
-    
-    // Verificar se é um erro de chave única
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json({
-        success: false,
-        message: `O campo ${(error as any).meta?.target?.[0] || 'desconhecido'} já está em uso`,
-      }, { status: 409 });
-    }
-    
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    console.error('Erro ao atualizar inversor:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+/**
+ * API route para deletar um inversor específico
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     // Verificar autenticação
-    const session = await auth();
-    if (!session || !session.user?.id) {
+    const session = await auth()
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Não autorizado" },
+        { error: 'Não autorizado' },
         { status: 401 }
-      );
+      )
     }
 
-    // Obter ID da Inversor a ser excluída
-    const id = params.id;
-    const userId = session.user.id;
+    const { id } = await params
 
-    // Verificar se o ID é válido
-    if (!id) {
+    // Verificar se o inversor existe e pertence ao usuário
+    const inversorExistente = await prisma.inversor.findFirst({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    })
+
+    if (!inversorExistente) {
       return NextResponse.json(
-        { success: false, message: "ID não fornecido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a Inversor existe e pertence ao usuário
-    const inversorToDelete = await prisma.inversor.findFirst({
-      where: { 
-        id: id,
-        userId: userId 
-      },
-    });
-
-    if (!inversorToDelete) {
-      return NextResponse.json(
-        { success: false, message: "Inversor não encontrada ou não pertence ao usuário" },
+        { error: 'Inversor não encontrado' },
         { status: 404 }
-      );
+      )
     }
 
-    // Excluir a Inversor
+    // Deletar o inversor
     await prisma.inversor.delete({
-      where: { 
-        id: id,
-        // Adicionar userId aqui se a chave primária/única for composta por id e userId
-        // Caso contrário, a verificação acima já garante que o item pertence ao usuário.
-        // Se id é único globalmente, a cláusula where: {id: id} é suficiente aqui,
-        // mas para maior segurança e consistência com a verificação, pode-se usar:
-        // id_userId: { id: id, userId: userId } se tal índice existir, ou manter como está.
-      },
-    });
+      where: { id }
+    })
 
-    // Retornar resposta de sucesso
-    return NextResponse.json({ 
-      success: true, 
-      message: "Inversor excluída com sucesso"
-    }, { status: 200 });
-    
+    return NextResponse.json(
+      { message: 'Inversor deletado com sucesso!' },
+      { status: 200 }
+    )
   } catch (error) {
-    console.error("Erro ao excluir Inversor:", error);
-    
-    // Erro genérico
-    return NextResponse.json({ 
-      success: false, 
-      message: "Erro ao processar a solicitação" 
-    }, { status: 500 });
+    console.error('Erro ao deletar inversor:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * API route para buscar um inversor específico
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Verificar autenticação
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Não autorizado' },
+        { status: 401 }
+      )
+    }
+
+    const { id } = await params
+
+    // Buscar o inversor
+    const inversor = await prisma.inversor.findFirst({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    })
+
+    if (!inversor) {
+      return NextResponse.json(
+        { error: 'Inversor não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(inversor)
+  } catch (error) {
+    console.error('Erro ao buscar inversor:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }

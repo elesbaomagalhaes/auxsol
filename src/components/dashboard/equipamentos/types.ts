@@ -52,6 +52,7 @@ export type Inversor = {
   correnteMaxSai: string,
   tensaoNomSai: string,
   THD: string,
+  tipoInv: string,
   frequenciaNom: string,
   fatorPotencia: number,
   tensaoMaxsSai: string,

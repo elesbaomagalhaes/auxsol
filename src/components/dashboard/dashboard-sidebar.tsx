@@ -18,6 +18,8 @@ import {
   HousePlug,
   Captions,
   Table,
+  Library,
+  Cog,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -66,11 +68,26 @@ export function DashboardSidebar({ session }: {session: Session| null}) {
       title: "Projetos",
       icon: FolderKanban,
       href: "/dashboard/projeto",
+      subItems: [
+        {
+          title: "Cadastro",
+          href: "/dashboard/projeto",
+        },
+        {
+          title: "Gerenciamento",
+          href: "/dashboard/projeto/gerenciamento",
+        }
+      ],
     },
     {
       title: "Técnicos",
       icon: Wrench,
-      href: "/dashboard/tecnicos",
+      href: "/dashboard/tecnico",
+    },
+    {
+      title: "Equipamentos",
+      icon: Cog,
+      href: "/dashboard/equipamentos/gerais",
     },
     {
       title: "Proteção",
@@ -97,7 +114,11 @@ export function DashboardSidebar({ session }: {session: Session| null}) {
       icon: Captions,
       href: "/dashboard/equipamentos/inversor",
     },
-    
+    {
+      title: "Biblioteca",
+      icon: Library,
+      href: "/dashboard/biblioteca",
+    },
     {
       title: "Acesso",
       icon: KeyRound,

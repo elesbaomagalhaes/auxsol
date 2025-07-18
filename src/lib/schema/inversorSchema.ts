@@ -25,6 +25,7 @@ export const inversorSchema = z.object({
   eficiencia: z.coerce
   .number()
   .min(0.01, { message: "Eficiencia deve ser maior que 0" }),
+  tipoInv: z.string().min(1, {message: "Tipo de inversor é obrigatório"}),
 });
 
 export type InversorSchema = z.infer<typeof inversorSchema>;
