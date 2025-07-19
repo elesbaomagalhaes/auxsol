@@ -5,6 +5,20 @@
 
 echo "🚀 Iniciando deploy na AWS..."
 
+# Resolver conflitos de git primeiro
+echo "🔧 Verificando e resolvendo conflitos de git..."
+if git status | grep -q "unmerged\|You have unmerged files"; then
+    echo "⚠️  Conflitos de merge detectados. Resolvendo..."
+    git merge --abort 2>/dev/null || echo "Nenhum merge em andamento"
+    git reset --hard HEAD
+    git clean -fd
+    git fetch origin
+    git reset --hard origin/main
+    echo "✅ Conflitos resolvidos!"
+else
+    echo "✅ Nenhum conflito detectado"
+fi
+
 # Verificar se Docker e Docker Compose estão instalados
 if ! command -v docker &> /dev/null; then
     echo "❌ Docker não encontrado. Instalando..."
