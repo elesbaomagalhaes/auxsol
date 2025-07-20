@@ -19,8 +19,8 @@ RUN npx prisma generate
 # Copia o código fonte
 COPY . .
 
-# Build da aplicação
-RUN npm run build
+# Build da aplicação com mais memória
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # Etapa de produção
 FROM node:20-slim AS runner
